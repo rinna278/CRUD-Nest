@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -11,21 +12,31 @@ export class UserService {
     private readonly userRepository: Repository<User>
   ) {}
 
-  findAll(): Promise<User[]> {
+  findAllUser(): Promise<User[]> {
     return this.userRepository.find();
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
     try {
-      const user = this.userRepository.create(createUserDto);
+      const saltOrRounds = 10;
+      const hashedPassword = await bcrypt.hash(
+        createUserDto.password,
+        saltOrRounds
+      );
+
+      const user = this.userRepository.create({
+        ...createUserDto,
+        password: hashedPassword, // ghi đè lại password
+      });
+
       return this.userRepository.save(user);
     } catch (error) {
       throw new Error('Could not create user');
     }
   }
 
-  async update(id: number, createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.findOneBy({ userId: id });
+  async updateUser(id: number, createUserDto: CreateUserDto): Promise<User> {
+    const user = await this.userRepository.findOneBy({ user_id: id });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
@@ -37,7 +48,7 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async delete(id: number): Promise<void> {
+  async deleteUser(id: number): Promise<void> {
     const result = await this.userRepository.delete(id);
     // Kiểm tra xem có bản ghi nào bị xóa không
     if (result.affected === 0) {

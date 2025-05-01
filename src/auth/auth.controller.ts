@@ -1,7 +1,6 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from 'src/jwt/jwt.guard';
- // Đường dẫn chính xác
+import { JwtAuthGuard } from 'src/common/guards/jwt.guard'; // Đảm bảo đường dẫn đúng
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +14,7 @@ export class AuthController {
     return { access_token: token };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard) // Thêm guard cho route này
   @Post('protected')
   getProtected(): { message: string } {
     return { message: 'This is a protected route' };

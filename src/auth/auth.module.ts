@@ -1,15 +1,25 @@
-import { Module } from '@nestjs/common';
+import { Strategy } from 'passport-jwt';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+
+import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { LoggerMiddleware } from '../common/middleware/logger.middleware';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
     JwtModule.register({
-      secret: 'hihimykey', // Thay thế bằng một key mạnh
-      signOptions: { expiresIn: '60s' }, // Thời gian hết hạn
+      secret: 'hihimykey',
+      signOptions: { expiresIn: '60s' },
     }),
   ],
-  providers: [AuthService],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy], // 👉 Thêm JwtStrategy
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('auth');
+  }
+}
