@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,6 +20,27 @@ export class UserService {
     return this.userRepository.find();
   }
 
+  async findUserById(id: number): Promise<User> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+
+  async findUserByUsername(username: string): Promise<User | null> {
+    const user = await this.userRepository.findOneBy({ username });
+    if (!user) {
+      throw new NotFoundException(`User with username ${username} not found`);
+    }
+    // console.log('user ', user);
+    return user || null;
+  }
+
+  async comparePassword(user: User, plainPassword: string): Promise<boolean> {
+    return bcrypt.compare(plainPassword, user.password);
+  }
+
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     try {
       const saltOrRounds = 10;
@@ -26,31 +51,36 @@ export class UserService {
 
       const user = this.userRepository.create({
         ...createUserDto,
-        password: hashedPassword, // ghi đè lại password
+        password: hashedPassword,
       });
 
       return this.userRepository.save(user);
     } catch (error) {
-      throw new Error('Could not create user');
+      throw new BadRequestException('Could not create user');
     }
   }
 
-  async updateUser(id: number, createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.findOneBy({ user_id: id });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+  async updateUser(
+    id: number,
+    updateUserDto: Partial<CreateUserDto>
+  ): Promise<User> {
+    const user = await this.findUserById(id);
+
+    // Nếu muốn thay đổi password, hash lại
+    if (updateUserDto.password) {
+      const saltOrRounds = 10;
+      updateUserDto.password = await bcrypt.hash(
+        updateUserDto.password,
+        saltOrRounds
+      );
     }
 
-    // Cập nhật các thuộc tính của user
-    Object.assign(user, createUserDto);
-
-    // Lưu thay đổi vào cơ sở dữ liệu
+    Object.assign(user, updateUserDto);
     return this.userRepository.save(user);
   }
 
   async deleteUser(id: number): Promise<void> {
     const result = await this.userRepository.delete(id);
-    // Kiểm tra xem có bản ghi nào bị xóa không
     if (result.affected === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

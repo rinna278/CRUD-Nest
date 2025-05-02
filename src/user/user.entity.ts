@@ -2,36 +2,36 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn({ name: 'Id' }) // chú ý ánh xạ
-  user_id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ length: 255, name: 'Tên' })
+  @Column({ length: 255 })
   fullname: string;
 
-  @Column({ length: 255, unique: true, name: 'Tên đăng nhập' })
-  user_name: string;
+  @Column({ length: 255, unique: true })
+  username: string;
 
-  @Column({ length: 255, unique: true, name: 'Email' })
+  @Column({ length: 255, unique: true })
   email: string;
 
-  @Column({ length: 255, name: 'Mật khẩu' })
+  @Column({ length: 255 })
   password: string;
 
-  @Column({ length: 255, name: 'Vai trò', default: () => 'user' })
+  @Column({ length: 255, default: () => 'user' })
   role: string;
 
   @Column({
     type: 'timestamp',
-    name: 'Created at',
+    name: 'created_at',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  created_at: Date;
+  createdAt: Date;
 
   @Column({
     type: 'timestamp',
-    name: 'Updated at',
+    name: 'updated_at',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updated_at: Date;
+  updatedAt: Date;
 }

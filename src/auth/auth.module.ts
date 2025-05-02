@@ -6,16 +6,20 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LoggerMiddleware } from '../common/middleware/logger.middleware';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { UserModule } from 'src/user/user.module';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
   imports: [
+    UserModule,
     JwtModule.register({
-      secret: 'hihimykey',
-      signOptions: { expiresIn: '60s' },
+      secret: process.env.SECRETKEY,
+      signOptions: { expiresIn: '120s' },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy], // 👉 Thêm JwtStrategy
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule implements NestModule {

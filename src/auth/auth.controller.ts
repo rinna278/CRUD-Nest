@@ -1,6 +1,15 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  UseGuards,
+  Post,
+  Body,
+  UnauthorizedException,
+  Get,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from 'src/common/guards/jwt.guard'; // Đảm bảo đường dẫn đúng
+import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -8,15 +17,21 @@ export class AuthController {
 
   @Post('login')
   async login(
-    @Body() loginDto: { userId: number }
+    @Body() { username, password }: LoginDto
   ): Promise<{ access_token: string }> {
-    const token = await this.authService.generateToken(loginDto.userId);
-    return { access_token: token };
+    // 1) Validate credentials
+    const user = await this.authService.validateUser(username, password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid username or password');
+    }
+
+    // 2) Issue JWT
+    return this.authService.login(user);
   }
 
-  @UseGuards(JwtAuthGuard) // Thêm guard cho route này
-  @Post('protected')
-  getProtected(): { message: string } {
-    return { message: 'This is a protected route' };
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Request() req) {
+    return { user: req.user }; // Trả về đối tượng chứa thông tin người dùng
   }
 }
