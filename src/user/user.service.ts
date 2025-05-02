@@ -8,6 +8,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import {
+  Pagination,
+  IPaginationOptions,
+  paginate,
+} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class UserService {
@@ -16,8 +21,9 @@ export class UserService {
     private readonly userRepository: Repository<User>
   ) {}
 
-  findAllUser(): Promise<User[]> {
-    return this.userRepository.find();
+  async findAllUser(options: IPaginationOptions): Promise<Pagination<User>> {
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    return paginate<User>(queryBuilder, options);
   }
 
   async findUserById(id: number): Promise<User> {
@@ -37,7 +43,7 @@ export class UserService {
     return user || null;
   }
 
-  async comparePassword(user: User, plainPassword: string): Promise<boolean> {
+  comparePassword(user: User, plainPassword: string): Promise<boolean> {
     return bcrypt.compare(plainPassword, user.password);
   }
 

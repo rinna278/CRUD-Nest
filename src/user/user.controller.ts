@@ -7,10 +7,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../common/guards/jwt.guard';
+import { User } from './user.entity';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 
 @Controller('users')
 export class UserController {
@@ -18,8 +21,17 @@ export class UserController {
 
   // @UseGuards(JwtAuthGuard)
   @Get()
-  async findAllUser() {
-    return this.userService.findAllUser();
+  async findAllUser(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10
+  ): Promise<Pagination<User>> {
+    const options: IPaginationOptions = {
+      page: +page,
+      limit: +limit,
+      route: '/users', // dùng để tạo các link next/prev/last/first
+    };
+
+    return this.userService.findAllUser(options);
   }
 
   // @UseGuards(JwtAuthGuard)

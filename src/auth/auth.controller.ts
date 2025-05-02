@@ -16,22 +16,18 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  async login(
-    @Body() { username, password }: LoginDto
-  ): Promise<{ access_token: string }> {
-    // 1) Validate credentials
+  async login(@Body() loginDto: LoginDto): Promise<{ access_token: string }> {
+    const { username, password } = loginDto;
     const user = await this.authService.validateUser(username, password);
     if (!user) {
       throw new UnauthorizedException('Invalid username or password');
     }
-
-    // 2) Issue JWT
     return this.authService.login(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
-    return { user: req.user }; // Trả về đối tượng chứa thông tin người dùng
+    return { user: req.user };
   }
 }

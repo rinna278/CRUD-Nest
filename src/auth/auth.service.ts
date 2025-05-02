@@ -24,8 +24,8 @@ export class AuthService {
     if (user && (await this.usersService.comparePassword(user, pass))) {
       // Exclude the password field before returning
       // @ts-ignore
-      const { password, ...result } = user;
-      return result;
+      // const { password, ...result } = user;
+      return user;
     }
     return null;
   }
