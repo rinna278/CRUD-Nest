@@ -1,5 +1,5 @@
 // src/auth/auth.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -44,5 +44,20 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException('Email not found');
+    }
+    const payload = { sub: user.id };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.RESET_PASSWORD_SECRET,
+      expiresIn: '2m',
+    });
+    const resetLink = `https://nguyentuanlinh.com/reset-password?token=${token}`;
+    console.log(`🔐 Reset password link: ${resetLink}`);
+    return { message: 'Reset password link sent to email' };
   }
 }
