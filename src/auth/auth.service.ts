@@ -1,5 +1,9 @@
 // src/auth/auth.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -34,7 +38,9 @@ export class AuthService {
    * Generate an access token from user information.
    * The controller will call this method to return the token.
    */
-  async login(user: Omit<User, 'password'>): Promise<{ access_token: string }> {
+  async login(
+    user: Omit<User, 'password'>
+  ): Promise<{ access_token: string; refresh_token: string }> {
     const payload = {
       sub: user.userId,
       username: user.username,
@@ -43,10 +49,34 @@ export class AuthService {
       permissions: user.role?.permissions?.map((p) => p.permissionName) || [],
     };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, { expiresIn: '10s' }),
+      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
 
+  async refreshToken(refreshToken: string): Promise<{ access_token: string }> {
+    try {
+      // Verify the refresh token
+      const decoded = this.jwtService.verify(refreshToken);
+
+      // Generate a new access token from the decoded data
+      const payload = {
+        sub: decoded.sub,
+        username: decoded.username,
+        email: decoded.email,
+        role: decoded.role,
+        permissions: decoded.permissions,
+      };
+
+      const new_access_token = this.jwtService.sign(payload, {
+        expiresIn: '1m',
+      });
+
+      return { access_token: new_access_token };
+    } catch (error) {
+      throw new BadRequestException('Invalid or expired refresh token');
+    }
+  }
   async forgotPassword(email: string) {
     const user = await this.usersService.findUserByEmail(email);
     if (!user) {
