@@ -1,57 +1,60 @@
-import { Roles } from './../common/decorators/roles.decorator';
 import {
   Controller,
-  Post,
-  Body,
-  UseGuards,
   Get,
+  Post,
   Patch,
-  Param,
   Delete,
+  Param,
+  Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UserService } from '../user/user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JwtAuthGuard } from '../common/guards/jwt.guard';
-import { User } from './user.entity';
+import { PermissionGuard } from 'src/common/guards/permission.guard';
+import { Permissions } from 'src/common/decorators/permissions.decorator';
 import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
-import { RolesGuard } from 'src/common/guards/role.guard';
+import { User } from '../user/user.entity';
+import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
 
+@UseGuards(JwtAuthGuard, PermissionGuard)
 @Controller('users')
+// @UseGuards(JwtAuthGuard, PermissionGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly usersService: UserService) {}
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles('admin')
+  @Permissions('view_users')
   @Get()
-  async findAllUser(
+  async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10
   ): Promise<Pagination<User>> {
-    const options: IPaginationOptions = {
-      page: +page,
-      limit: +limit,
-      route: '/users', // dùng để tạo các link next/prev/last/first
-    };
-
-    return this.userService.findAllUser(options);
+    const options: IPaginationOptions = { page, limit, route: '/users' };
+    return this.usersService.findAllUser(options);
   }
+
+  @Permissions('create_user')
   @Post()
-  createUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser(createUserDto);
+  create(@Body() dto: CreateUserDto) {
+    return this.usersService.createUser(dto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Permissions('find_user_by_id')
+  @Get(':id')
+  async findUserById(@Param('id') id: number): Promise<User> {
+    const user = await this.usersService.findUserById(id);
+    return user;
+  }
+
+  @Permissions('update_user')
   @Patch(':id')
-  updateUser(@Param('id') id: string, @Body() createUserDto: CreateUserDto) {
-    return this.userService.updateUser(+id, createUserDto);
+  update(@Param('id') id: string, @Body() dto: CreateUserDto) {
+    return this.usersService.updateUser(+id, dto);
   }
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles('admin')
+  @Permissions('delete_user')
   @Delete(':id')
-  deleteUser(@Param('id') id: string) {
-    return this.userService.deleteUser(+id);
+  remove(@Param('id') id: string) {
+    return this.usersService.deleteUser(+id);
   }
 }

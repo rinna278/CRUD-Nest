@@ -3,6 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { User } from './user/user.entity';
+import { Role } from './role/role.entity';
+import { Permission } from './permission/permission.entity';
+import { RoleModule } from './role/role.module';
 // import * as Joi from '@hapi/joi';
 
 @Module({
@@ -21,9 +25,11 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.DB_DATABASE,
       autoLoadEntities: true,
       synchronize: true, // chỉ nên dùng khi dev
+      entities: [User, Role, Permission],
     }),
     UserModule,
     AuthModule,
+    RoleModule,
   ],
 })
 export class AppModule {}

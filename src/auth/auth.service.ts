@@ -36,10 +36,11 @@ export class AuthService {
    */
   async login(user: Omit<User, 'password'>): Promise<{ access_token: string }> {
     const payload = {
-      sub: user.id,
+      sub: user.userId,
       username: user.username,
       email: user.email,
       role: user.role,
+      permissions: user.role?.permissions?.map((p) => p.permissionName) || [],
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -51,7 +52,12 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('Email not found');
     }
-    const payload = { sub: user.id };
+    const payload = {
+      username: user.username,
+      sub: user.userId,
+      email: user.email,
+      role: user.role,
+    };
     const token = this.jwtService.sign(payload, {
       secret: process.env.RESET_PASSWORD_SECRET,
       expiresIn: '2m',
