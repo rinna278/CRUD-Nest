@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './role.entity';
@@ -16,6 +20,10 @@ export class RoleService {
   ) {}
 
   async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
+    if (!createRoleDto.roleName) {
+      throw new BadRequestException('Role name is required');
+    }
+
     const role = this.roleRepository.create(createRoleDto); // Tạo instance Role
     return await this.roleRepository.save(role); // Lưu vào cơ sở dữ liệu
   }
@@ -99,7 +107,7 @@ export class RoleService {
 
   async getPermissionsOfRole(roleId: number): Promise<string[]> {
     const role = await this.roleRepository.findOne({
-      where: { roleId: roleId }, // Sử dụng 'roleId'
+      where: { roleId: roleId },
       relations: ['permissions'],
     });
 
@@ -107,6 +115,6 @@ export class RoleService {
       throw new NotFoundException(`Role with ID ${roleId} not found`);
     }
 
-    return role.permissions.map((p) => p.permissionName); // Đảm bảo rằng `permissionName` là đúng
+    return role.permissions.map((p) => p.permissionName);
   }
 }

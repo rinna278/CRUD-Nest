@@ -8,6 +8,7 @@ import {
   Body,
   Query,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -43,6 +44,9 @@ export class UserController {
   @Get(':id')
   async findUserById(@Param('id') id: number): Promise<User> {
     const user = await this.usersService.findUserById(id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
     return user;
   }
 

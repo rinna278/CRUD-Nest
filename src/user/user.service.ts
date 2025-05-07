@@ -8,13 +8,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import {
-  Pagination,
-  IPaginationOptions,
-  paginate,
-} from 'nestjs-typeorm-paginate';
+import { Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { Role } from 'src/role/role.entity';
 import { RoleService } from 'src/role/role.service';
+import { PaginationService } from 'src/common/pagination/pagination.service';
 
 @Injectable()
 export class UserService {
@@ -23,14 +20,12 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
-    private readonly roleService: RoleService
+    private readonly roleService: RoleService,
+    private readonly paginationService: PaginationService
   ) {}
 
   async findAllUser(options: IPaginationOptions): Promise<Pagination<User>> {
-    const queryBuilder = this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.role', 'role');
-    return paginate<User>(queryBuilder, options);
+    return this.paginationService.paginateUsers(options);
   }
 
   async findUserById(id: number): Promise<User> {
@@ -127,6 +122,28 @@ export class UserService {
 
     Object.assign(user, updateUserDto);
     return this.userRepository.save(user);
+  }
+
+  async checkUserExistenceById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { userId: id },
+      relations: ['role', 'role.permissions'],
+    });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+
+  async checkUserExistenceByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['role', 'role.permissions'],
+    });
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+    return user;
   }
 
   async deleteUser(id: number): Promise<void> {

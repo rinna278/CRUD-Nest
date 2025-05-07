@@ -6,7 +6,7 @@ export class Permission {
   @PrimaryGeneratedColumn({ name: 'permission_id' })
   permissionId: number;
 
-  @Column({ name: 'permission_name' })
+  @Column({ name: 'permission_name', nullable: false })
   permissionName: string;
 
   @ManyToMany(() => Role, (role) => role.permissions)

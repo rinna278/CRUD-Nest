@@ -1,22 +1,29 @@
-import { IsString, IsEmail, IsNotEmpty, IsNumberString } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  IsNumberString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateUserDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Full name must be a string' })
+  @IsNotEmpty({ message: 'Full name should not be empty' })
   fullname: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Username must be a string' })
+  @IsNotEmpty({ message: 'Username should not be empty' })
   username: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: 'Email must be a valid email' })
   email: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Password must be a string' })
+  @IsNotEmpty({ message: 'Password should not be empty' })
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password: string;
 
-  @IsNotEmpty()
-  @IsNumberString()
+  @IsNotEmpty({ message: 'Role ID should not be empty' })
+  @IsNumberString({ no_symbols: true }, { message: 'Role ID must be a number' })
   role_id: number;
 }

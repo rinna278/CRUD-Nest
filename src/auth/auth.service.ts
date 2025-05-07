@@ -49,7 +49,7 @@ export class AuthService {
       permissions: user.role?.permissions?.map((p) => p.permissionName) || [],
     };
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '10s' }),
+      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
       refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
@@ -69,7 +69,7 @@ export class AuthService {
       };
 
       const new_access_token = this.jwtService.sign(payload, {
-        expiresIn: '1m',
+        expiresIn: '15m',
       });
 
       return { access_token: new_access_token };

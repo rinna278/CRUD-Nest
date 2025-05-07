@@ -7,6 +7,7 @@ import {
   UseGuards,
   Delete,
   Get,
+  NotFoundException,
 } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { Permissions } from '../common/decorators/permissions.decorator';
@@ -14,6 +15,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { Role } from './role.entity';
 import { PermissionGuard } from 'src/common/guards/permission.guard';
 import { JwtAuthGuard } from 'src/common/guards/jwt.guard';
+import { PermissionService } from 'src/permission/permission.service';
 
 class AddPermissionDto {
   permissionNames: string[];
@@ -22,7 +24,10 @@ class AddPermissionDto {
 @UseGuards(JwtAuthGuard, PermissionGuard)
 @Controller('role')
 export class RoleController {
-  constructor(private readonly roleService: RoleService) {}
+  constructor(
+    private readonly roleService: RoleService,
+    private readonly permissionService: PermissionService
+  ) {}
 
   @Permissions('create_role')
   @Post()
@@ -48,6 +53,11 @@ export class RoleController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AddPermissionDto
   ) {
+    const role = await this.roleService.findRoleById(id);
+    if (!role) {
+      throw new NotFoundException(`Role with ID ${id} not found`);
+    }
+
     return this.roleService.addPermissionsToRole(id, dto.permissionNames);
   }
 
@@ -64,6 +74,19 @@ export class RoleController {
     @Param('roleId') roleId: number,
     @Param('permissionId') permissionId: number
   ): Promise<Role> {
+    const role = await this.roleService.findRoleById(roleId);
+    if (!role) {
+      throw new NotFoundException(`Role with ID ${roleId} not found`);
+    }
+
+    const permission =
+      await this.permissionService.findPermissionById(permissionId);
+    if (!permission) {
+      throw new NotFoundException(
+        `Permission with ID ${permissionId} not found`
+      );
+    }
+
     return this.roleService.removePermissionFromRole(roleId, permissionId);
   }
 }

@@ -56,8 +56,9 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Post('reset-password')
-  async resetPassword(@Body() body: { token: string; newPassword: string }) {
-    const { token, newPassword } = body;
+  async resetPassword(@Body() body: { token: string; new_password: string }) {
+    const { token, new_password } = body;
+    console.log(new_password);
 
     try {
       const payload = this.jwtService.verify(token, {
@@ -66,7 +67,9 @@ export class AuthController {
 
       const user = await this.userService.findUserById(payload.sub);
       // user.password = await bcrypt.hash(newPassword, 10);
-      await this.userService.updateUser(user.userId, { password: newPassword });
+      await this.userService.updateUser(user.userId, {
+        password: new_password,
+      });
 
       return { message: 'Password reset successfully' };
     } catch (err) {
