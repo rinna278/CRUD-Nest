@@ -5,6 +5,7 @@ import {
   IsNumberString,
   MinLength,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
   @IsString({ message: 'Full name must be a string' })
@@ -15,9 +16,11 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Username should not be empty' })
   username: string;
 
+  @ApiProperty({ example: 'user@example.com', description: 'Email của user' })
   @IsEmail({}, { message: 'Email must be a valid email' })
   email: string;
 
+  @ApiProperty({ example: 'password123', description: 'Mật khẩu' })
   @IsString({ message: 'Password must be a string' })
   @IsNotEmpty({ message: 'Password should not be empty' })
   @MinLength(8, { message: 'Password must be at least 8 characters long' })

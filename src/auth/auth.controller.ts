@@ -34,7 +34,6 @@ export class AuthController {
     }
     return this.authService.login(user);
   }
-  // @UseGuards(JwtAuthGuard)
   @Post('refresh')
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);

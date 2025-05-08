@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +19,15 @@ async function bootstrap() {
     new TransformResponseInterceptor()
   );
   app.useGlobalFilters(new AllExceptionsFilter());
+  const config = new DocumentBuilder()
+    .setTitle('API Documentation')
+    .setDescription('My APIs')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document); // Đường dẫn /api/docs
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
